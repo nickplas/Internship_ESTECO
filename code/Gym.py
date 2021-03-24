@@ -2,62 +2,99 @@
 import gym
 import numpy as np
 
-#Notes
-#observation is made up by: cart position, cart velocity, pole angle and
-#                           pole velocity at tip
-
-#actions : 0 pushes the cart to the left
-#          1 pushes the cart to the right 
-
-#Definitions
-
-# Policy based on the angle, no RL used
-def policy_angle(observation):
-    _, _, angle, _ = observation 
-    if angle < 0:
-        return 0
-    else:
-        return 1
-
-def Q_learning(env):
-    # Approccio Q-learning, non per forza tutte le cose in questa funzione
-    # fare una tabella di dimensione n.stati, n.azioni
-    # usare l'approccio epsilon-greedy per decidere l'azione
-    # provare con epsilon a 50% e molti episodi
-
-    #initialize Q(state, action) arbitrarily except for Q(terminal, _) = 0
-    Q = np.zeros((len(states), len(actions)))
-
+def Q_learning(env, Q, episodes, steps, alpha, gamma, delta):
     #loop for each episode
+    for eps in range (episodes):
         #initialize S
+        state = env.reset()        
         #loop for each step episode
-            #Choose A form S using Q
+        for i in range(steps):
+            #To show the environment
+            #env.render()
+            #Choose A form S using Q (epsilon greedy policy)
+            a = eps_greedy(state, delta, Q)
             #Take action A, observe R and S
+            new_state, reward, done, _  = env.step(a)
             #update rule 
-            #update S
-        #until S is terminal
+            Q[state, a] = Q[state, a] + alpha *(reward + gamma * np.max(Q[new_state,:]) - Q[state, a])
+            #update state
+            state = new_state
+            #until S is terminal
+            if done:
+                break            
+    return Q
 
-    return
+def eps_greedy(s, delta, Q):
+    prob = np.random.rand()
+    action = 0
+    if prob < delta:
+        action = env.action_space.sample()
+    else:
+        action = np.argmax(Q[s,: ])
+    return action 
 
+def sarsa(env, Q, episodes, steps, alpha, gamma, delta):
+    for eps in range (episodes):
+        #initialize S
+        state = env.reset()
+        #Choose A form S using Q (epsilon greedy policy)
+        a1 = eps_greedy(state, delta, Q)        
+        #loop for each step episode
+        for _ in range(steps):
+            #To show the environment
+            #env.render()
+            #Take action A, observe R and S
+            new_state, reward, done, _  = env.step(a1)
+            #Choose A' form S' using Q (epsilon greedy policy)
+            a2 = eps_greedy(new_state, delta, Q)
+            #update rule 
+            Q[state, a1] = Q[state, a1] + alpha *(reward + gamma * Q[new_state,a2] - Q[state, a1])
+            #update state
+            state = new_state
+            #update action
+            a1 = a2
+            #until S is terminal
+            if done:
+                break            
+    return Q
+
+def evolution(Q, env):
+    values = [np.argmax(row) for row in Q]
+    keys = list(range(len(Q)))
+    policy = dict(zip(keys,values))
+    env.reset()
+    p=0
+    while(True):
+        a = policy[p]
+        step = env.step(a)
+        p=step[0]
+        if(step[2]):
+            return step[1]
+    
 #Main
 if __name__=="__main__":
-    env = gym.make('CartPole-v0')
-    obs = env.reset()
-    print(obs)
+    #env = gym.make('FrozenLake-v0')
+    env = gym.make("Taxi-v3")
+    #Q learning
+    Q1 = np.zeros((env.observation_space.n, env.action_space.n))
+    episodes = 10000
+    steps = 100
+    alpha = 0.1 # da tenere basso, Learning rate
+    gamma = 0.99 # se basso risultati non superano lo 0.1
+    eps = 0.6
+    Q1 = Q_learning(env, Q1, episodes, steps, alpha, gamma, eps)
+    #print(Q1)
+    
 
+    #Sarsa
+    # ottiene risultati migliori con poca esplorazione, eps = 0.2
+    Q2 = np.zeros((env.observation_space.n, env.action_space.n))
+    Q2 = sarsa(env, Q2, episodes, steps, alpha, gamma, 0.2)
 
-
-    #for i_episode in range(20):
-    #    observation = env.reset()
-    #    cumulate_reward = 0
-    #    for t in range(100):
-    #        env.render()
-    #        #print(observation)
-    #        action = policy_angle(observation) #env.action_space.sample()
-    #        observation, reward, done, info = env.step(action)
-    #        cumulate_reward += reward
-    #        if done:
-    #            print("Episode finished after {} timesteps".format(t+1))
-    #            break
-    #env.close()
+    N=50
+    print("Q-Learning \n", sum([evolution(Q1,env) for i in range(N)])/N)
+    print("\n")
+    print("Sarsa \n", sum([evolution(Q2,env) for i in range(N)])/N)
+    
+       
 
