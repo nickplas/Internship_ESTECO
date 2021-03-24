@@ -95,6 +95,3 @@ if __name__=="__main__":
     print("Q-Learning \n", sum([evolution(Q1,env) for i in range(N)])/N)
     print("\n")
     print("Sarsa \n", sum([evolution(Q2,env) for i in range(N)])/N)
-    
-       
-
