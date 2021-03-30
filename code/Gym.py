@@ -73,8 +73,7 @@ def evolution(Q, env):
     
 #Main
 if __name__=="__main__":
-    #env = gym.make('FrozenLake-v0')
-    env = gym.make("Taxi-v3")
+    env = gym.make('FrozenLake-v0')
     #Q learning
     Q1 = np.zeros((env.observation_space.n, env.action_space.n))
     episodes = 10000
