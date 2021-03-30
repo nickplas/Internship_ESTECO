@@ -1,0 +1,2 @@
+from gym_Continuous.envs.Continuous_env import ContinuousEnv
+#from gym_Continuous.envs.Continuous_extrahard_env import ContinuousExtraHardEnv
