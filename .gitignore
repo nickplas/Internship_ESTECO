@@ -4,4 +4,4 @@ env/
 .DS_Store
 __pycache__
 gym_RL.egg-info/
-./papers/[Adaptive Computation and Machine Learning] Richard S. Sutton, Andrew G. Barto - Reinforcement Learning_ An Introduction (2018, The MIT Press) - libgen.lc.pdf
+Reinforcement Learning_ An Introduction.pdf
