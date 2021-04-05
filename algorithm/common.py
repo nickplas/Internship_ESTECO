@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.spatial import Delaunay
+from math import exp
 
 def Q_learning(env, Q, episodes, steps, alpha, gamma, delta):
     #loop for each episode
@@ -25,7 +27,6 @@ def Q_learning(env, Q, episodes, steps, alpha, gamma, delta):
 
 def eps_greedy(env, s, delta, Q):
     prob = np.random.rand()
-    action = 0
     if prob < delta:
         action = env.sample()
     else:
@@ -56,3 +57,90 @@ def sarsa(env, Q, episodes, steps, alpha, gamma, delta):
             a1 = a2
             #until S is terminal                       
     return Q
+
+def create_training_data(episodes, steps, env):
+    experience = []
+    for _ in range(episodes):
+        env.reset()
+        for i in range(steps):
+            current = [env.state]
+            action = env.sample()
+            current.append(action)
+            obs, reward, done, info = env.step(action)
+            current.append(obs)
+            current.append(reward)
+            experience.append(current)
+    return np.array(experience)
+
+def closest_points(point, points, k):
+    K = []
+    for i in range(len(points)):      
+        point2 = points[i][:2]
+        dist = np.linalg.norm(point - point2)
+        if dist < k:
+            k.append(point2)
+    return K
+
+def in_hull(p, hull):
+    if not isinstance(hull,Delaunay):
+        hull = Delaunay(hull)
+    return hull.find_simplex(p)>=0
+
+def LWR(weights):
+
+    return 0
+
+def hedger_prediction(state, action, h, k_threshold, e):
+    # INPUT: (s, a), bandwidth h
+
+    #concatenate s and a in q
+    q = np.array(state + action)
+    # find set of K points near q (use k threshold)
+    K = closest_points(q, e, k_threshold)
+    # if cardinality K < k_t
+    if len(K) < k_threshold:
+    #   return don't know
+        return 0
+    # else
+    else:
+    #   calculate IVH H
+    #   if q in H:
+        if in_hull(q, np.array(K)):
+    #       calculate kernel weight: exp(-(q - k_i)^2 / h^2)
+            weights = np.zeros((len(K), len(q)))
+            i = 0
+            for k in K:
+                weights[i] = exp(-(q-k)^2/h^2)
+                i += 1
+    #       do regression on K using weights
+
+    #       return fitted function in (s, a)
+            return 
+    #   else:
+        else:
+    #       return don't know
+            return 0
+
+def hedger_training(e, alpha, gamma, h, state, action, k_threshold):
+    # INPUT: Experience (s, a, s', r)
+    #        Learning rate
+    #        Discount factor
+    #        Bandwidth h
+    # q <- Qpredict (use hedger training)
+    q = hedger_prediction(state, action, h, k_threshold, e)
+    # qnext <- max Qpredict (s', a')   [max in a']
+    qnext = 
+    # K <- set used in calculation of q
+    K = closest_points(q, e, k_threshold)
+    # compute weight exp(-(q - k_i)^2 / h^2) = ki_i
+    weight = exp(-(q-k)^2/h^2)
+    # qnew <- q + alpha(r + gamma*qnext -q)
+    qnext = q + alpha(r + gamma*qnext - q)
+    # Learn Q(s, a) = qnew
+    
+    # for each (s_i, a_i) in K do
+    for ():
+    #   Q(s_i, a_i) <- Q(s_i, a_i) + ki_i(qnext - Q(s_i, a_i))
+
+
+    return 0
