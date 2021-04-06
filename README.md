@@ -14,5 +14,5 @@
 
 * Hedger: First approach to a continuous state and action spaces in which function approximations are used to extend the Q-Learning algorithm. Here the approximation is obtained using a locally weighted regression.
 
-* DQN: RL algorithm for continuous state and action spaces. Extension of Q-learning in which a neural network is used to approximate the Q action-value function. 
+* DQN: RL algorithm for continuous state space. Extension of Q-learning in which a neural network is used to approximate the Q action-value function. If the problem has a continuous action space other algorithms need to be used (like DDPG) 
 
