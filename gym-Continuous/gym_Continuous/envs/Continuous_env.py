@@ -16,16 +16,27 @@ class ContinuousEnv(gym.Env):
     self.initial_state = [0, [self.f(self.x)],[self.g(self.f, self.x)]] # iteration, obj value, gradient of last h values
     self.state = self.initial_state
     self.H = 25 # number of gradients to be stored
-    self.min_action = -1 # min_action
-    self.max_action = 1 # max_action
+    self.min_action = -1.0 # min_action
+    self.max_action = 1.0 # max_action
     self.lower_bound = -5 # min_state
     self.upper_bound = 5 # max_state
     self.eps = 0.01 #eps # o inizializzare ad un valore basso
+
+    self.action_space = spaces.Box(
+            low=self.min_action,
+            high=self.max_action,
+            shape=(1,),
+            dtype=np.float32)
+
+    self.observation_space = spaces.Box(
+            low=self.lower_bound,
+            high=self.upper_bound,
+            dtype=np.float32)
     
   def step(self, action):
     reward = self.reward(action)
     done = (reward > 1 or self.x < self.lower_bound or self.x > self.upper_bound)
-    obs = self.x
+    obs = self.state
     info = {}
     return obs, reward, done, info  
     
@@ -33,7 +44,7 @@ class ContinuousEnv(gym.Env):
     self.state = self.initial_state
     return self.state
     
-  def render(self, mode='human'):
+  def render(self, mode='human'):  # plot funzione e punto x e y
     return str(self.state)
 
   #def close(self):
@@ -46,7 +57,7 @@ class ContinuousEnv(gym.Env):
     self.update(action)
     if  (np.abs(self.state[2][-1]) < self.eps and action != 0):
       return 100
-    elif self.state[1][-1] > 0 :
+    elif self.state[1][-1] > 0 :  # penalizzare se sale troppo
       return -1
     elif  self.state[1][-1] < 0: 
       return 1
@@ -71,7 +82,18 @@ class ContinuousEnv(gym.Env):
     h = 1e-10
     return (func(x+h)-func(x))/h
 
+    # Finire di testare DQN e DDPG: entrambi gli algoritmi ritornano un tensore come azione ma
+    # Env.step ha bisogno di un numpyarray, runnare di nuovo gli esempi del cartpole e del
+    # mountain car
 
+    # Capire come passare una dimensione continua come output della rete neurale "Actor", è
+    # una distribuzione di probabilità dove prendo la moda oppure una stima puntuale
+    # dell'azione che eseguirò?
+
+    # Testare l'environment con funzioni semplici (parabole o altre con un solo punto di minimo)
+
+    # Iniziare con funzioni con minimi locali e capire come modificare il reward in modo da
+    # cercare il punto di ottimo
 
 
     
