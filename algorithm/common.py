@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def Q_learning(env, Q, episodes, steps, alpha, gamma, delta):
     # loop for each episode
     for eps in range(episodes):
