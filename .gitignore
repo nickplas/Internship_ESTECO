@@ -5,8 +5,7 @@ env/
 __pycache__
 gym_RL.egg-info/
 Reinforcement_Learning_An_Introduction.pdf
-papers/
 gym_Continuous.egg-info/
-burocrazia/
-materiale/
 .idea/
+output/
+others/

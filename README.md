@@ -16,3 +16,14 @@
 
 * DQN: RL algorithm for continuous state space. Extension of Q-learning in which a neural network is used to approximate the Q action-value function. If the problem has a continuous action space other algorithms need to be used (like DDPG) 
 
+# TODO
+
+``` export PYTHONPATH="${PYTHONPATH}:~/Desktop/Internship_ESTECO/"```
+
+``` pip install pyglet==1.5.11 ```
+
+# Reinforcement learning internship
+
+## Installation
+
+```pip install -r requirements.txt ```

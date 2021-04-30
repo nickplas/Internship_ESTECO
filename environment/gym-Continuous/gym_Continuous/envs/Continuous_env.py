@@ -8,11 +8,12 @@ import matplotlib.pyplot as plt
 class ContinuousEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, func1, min_action, max_action):
+    def __init__(self, training_bool, min_action, max_action):
         super(ContinuousEnv, self).__init__()
-        self.f = func1  # come funzione python
-        self.lower_bound = np.array([-1, -99999], dtype=np.float32)  # min_state
-        self.upper_bound = np.array([8, 99999], dtype=np.float32)  # max_state
+        #self.f = func1  # come funzione python
+        self.lower_bound = np.array([0, -99999], dtype=np.float32)  # min_state
+        self.upper_bound = np.array([100, 99999], dtype=np.float32)  # max_state
+        self.param = [random.uniform(self.lower_bound[0], self.upper_bound[0]) for _ in range(4)]
         self.x = random.uniform(self.lower_bound[0], self.upper_bound[0])  # x
         self.y = self.f(self.x)
         self.H = 1  # number of gradients to be stored
@@ -25,7 +26,10 @@ class ContinuousEnv(gym.Env):
         self.state = self.initial_state
         self.min_action = min_action  # min_action
         self.max_action = max_action  # max_action
-        self.eps = 0.001  # eps # o inizializzare ad un valore basso
+        self.eps = 0.01  # eps # o inizializzare ad un valore basso
+        self.episodes = 0
+        self.training = training_bool
+        self.min = self.compute_min()
 
         # Figures for rendering
         self.x_axis = np.linspace(self.lower_bound[0], self.upper_bound[0], 100000)
@@ -46,11 +50,9 @@ class ContinuousEnv(gym.Env):
             dtype=np.float32)
 
     def step(self, action):
-        print('x', self.x)
         reward = self.reward(action)
-        print('reward', reward)
         done = int(self.x < self.lower_bound[0] or self.x > self.upper_bound[0] or
-                   abs(self.gradient[-1]) < self.eps)
+                   reward >= 999*abs(self.y).item())
         obs = np.array(self.flatten()).reshape(self.observation_space.shape[0])
         info = {}
         # self.render()
@@ -60,7 +62,11 @@ class ContinuousEnv(gym.Env):
         return np.array(self.difference + self.gradient)
 
     def reset(self):
-        self.x = 1# random.uniform(self.lower_bound[0], self.upper_bound[0])
+        self.episodes += 1
+        if self.episodes % 150 == 0:
+            self.param = [random.uniform(self.lower_bound[0], self.upper_bound[0]) for _ in range(4)]
+            self.min = self.compute_min()
+        self.x = random.uniform(self.lower_bound[0], self.upper_bound[0])
         self.difference = [self.f(self.x)]  # need to be a list
         self.gradient = [self.g(self.f, self.x)]  # need to be a list
         self.initial_state = np.array([self.difference, self.gradient])
@@ -71,7 +77,7 @@ class ContinuousEnv(gym.Env):
     def render(self, mode='human'):  # plot funzione e punto x e y
         plt.plot(self.x, self.y, 'o')
         plt.show()
-        plt.pause(0.01)
+        plt.pause(1)
         return str(self.state)
 
     # def close(self):
@@ -83,12 +89,15 @@ class ContinuousEnv(gym.Env):
     def reward(self, action):
         self.update(action)
         # reward = (-self.y*0.01).item()
-        # if self.x - self.lower_bound[0] < 5 or self.upper_bound[0] - self.x < 5:
-        #     reward = (-self.y * 10).item()
+        if self.x - self.lower_bound[0] < 0 or self.upper_bound[0] - self.x < 0:
+            return -100000*abs(self.x)
         # if abs(self.gradient[0]) < self.eps:
         #     reward = 10
-        reward = (-self.y).item()
-        return reward
+        # print('x', self.x)
+        if self.training and abs(self.x - self.min) < self.eps:
+            print('minimum has been reached', self.min)
+            return 1000*abs(self.y).item()
+        return (-self.y).item()
 
     def update(self, action):
         self.iteration += 1
@@ -110,14 +119,9 @@ class ContinuousEnv(gym.Env):
         # print('after self.grad update', self.gradient)
 
     def g(self, func, x):
-        if self.iteration % 5 == 0:
-            self.h -= self.h*.1
-        # print('x', x)
-        # print('x+h', x+self.h)
-        # print('fx+h', func(x+self.h))
-        # print('fx+', func(x))
+        # if self.iteration % 5 == 0:
+        #     self.h -= self.h*.1
         result = (func(x + self.h) - func(x)) / self.h
-        # print('result', result)
         return result
 
     def remove_from_memory(self, memory):
@@ -141,10 +145,20 @@ class ContinuousEnv(gym.Env):
         memory = self.remove_from_memory(memory)
         return memory
 
-        # TODO: Testare l'environment con funzioni semplici (parabole o altre con un solo punto di minimo)
+    def f(self, x):
+        return (x - self.param[0])*(x - self.param[1])*(x - self.param[2])*(x - self.param[3])
 
-        # TODO: Iniziare con funzioni con minimi locali e capire come modificare il reward in modo da
-        # cercare il punto di ottimo
+    def compute_min(self):  # return the x of the global minimum
+        parameters = sorted(self.param)
+        if (parameters[1] - parameters[0]) < (parameters[3] - parameters[2]):
+            return parameters[2] + (parameters[3] - parameters[2])/2
+        return parameters[0] + (parameters[1] - parameters[0])/2
+
+    # TODO: parametrizzare la funzione (x-a)(x-b)(x-c)(x-d) all'interno dell'env
+    # TODO: avere un attributo che memorizza il punto di minimo della funzione (magari usare un bool che
+    #       ci permette di capiare se siamo nel training, quindi ci serve sto valore, o in testing)
+    # TODO: allenare la funzione con diversi valori di a,b,c,d (cambiano ogni x episodi)
+    # TODO: fare un training con molti steps in modo da permettere all'agente di esplorare
 
 
 
