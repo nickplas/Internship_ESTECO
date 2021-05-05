@@ -1,14 +1,13 @@
-# from code import actor_critic
 import numpy as np
-# import torch.optim as optim
 import gym
 import torch
-# import torch.nn as nn
 import random
+from stable_baselines3.common.off_policy_algorithm import OffPolicyAlgorithm
 
 
-class DDPG:
+class DDPG(OffPolicyAlgorithm):
     def __init__(self, env, anet, t_anet, optimA, cnet, t_cnet, optimC, loss, capacity):
+        super(DDPG, self).__init__(anet, env, t_anet, learning_rate=0.001)
         self.env = env
 
         # actor
