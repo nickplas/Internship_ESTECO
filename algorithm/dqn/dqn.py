@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch
 import gym
 import torch.optim as optim
+from stable_baselines3.common.off_policy_algorithm import OffPolicyAlgorithm
 
 
 class NeuralNetwork(nn.Module):
@@ -20,8 +21,9 @@ class NeuralNetwork(nn.Module):
         return self.linear3(out)
 
 
-class DQN:
-    def __init__(self, env, net, target, optim, loss):
+class DQN(OffPolicyAlgorithm):
+    def __init__(self, env, net, target, optim, loss, device):
+        super(DQN, self).__init__(net, env, target, learning_rate=0.001)
         self.env = env
         self.memory = []
         self.net = net
@@ -30,9 +32,10 @@ class DQN:
         self.target.eval()
         self.optimizer = optim
         self.loss = loss
+        self.device = device
 
     def get_action(self, eps, s):
-        state = torch.tensor(s).float().unsqueeze(0).to(device)
+        state = torch.tensor(s).float().unsqueeze(0).to(self.device)
         self.net.eval()
         with torch.no_grad():
             action = self.net(state)
